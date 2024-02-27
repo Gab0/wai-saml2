@@ -31,7 +31,7 @@ data SAML2Config = SAML2Config {
     saml2PrivateKey :: !(Maybe PrivateKey),
     -- | The identity provider's public key, used to validate
     -- signatures.
-    saml2PublicKey :: !PublicKey,
+    saml2PublicKey :: !(Maybe PublicKey),
     -- | The name of the entity we expect assertions from. If this is set
     -- to 'Nothing', the issuer name is not validated.
     saml2ExpectedIssuer :: !(Maybe T.Text),
@@ -50,7 +50,9 @@ data SAML2Config = SAML2Config {
     -- | Always decrypt assertions using 'saml2PrivateKey' and reject plaintext assertions.
     --
     -- @since 0.4
-    saml2RequireEncryptedAssertion :: !Bool
+    saml2RequireEncryptedAssertion :: !Bool,
+    -- | Whether to accept the certificate provided in the SAML response as a valid certificate.
+    saml2AcceptResponseCertificate :: !Bool
 }
 
 -- | 'saml2Config' @privateKey publicKey@ constructs a 'SAML2Config' value
@@ -58,7 +60,7 @@ data SAML2Config = SAML2Config {
 -- SP's private key and @publicKey@ as the IdP's public key. You should
 -- almost certainly change the resulting settings.
 -- This requires encrypted assertions by default.
-saml2Config :: PrivateKey -> PublicKey -> SAML2Config
+saml2Config :: PrivateKey -> Maybe PublicKey -> SAML2Config
 saml2Config privKey pubKey = (saml2ConfigNoEncryption pubKey){
     saml2PrivateKey = Just privKey,
     saml2RequireEncryptedAssertion = True
@@ -70,7 +72,7 @@ saml2Config privKey pubKey = (saml2ConfigNoEncryption pubKey){
 --
 -- @since 0.4.0.0
 --
-saml2ConfigNoEncryption :: PublicKey -> SAML2Config
+saml2ConfigNoEncryption :: Maybe PublicKey -> SAML2Config
 saml2ConfigNoEncryption pubKey = SAML2Config{
     saml2AssertionPath = "/sso/assert",
     saml2PrivateKey = Nothing,
@@ -79,7 +81,8 @@ saml2ConfigNoEncryption pubKey = SAML2Config{
     saml2ExpectedDestination = Nothing,
     saml2Audiences = [],
     saml2DisableTimeValidation = False,
-    saml2RequireEncryptedAssertion = False
+    saml2RequireEncryptedAssertion = False,
+    saml2AcceptResponseCertificate = False
 }
 
 --------------------------------------------------------------------------------

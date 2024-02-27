@@ -73,6 +73,8 @@ data SAML2Error
     --
     -- @since 0.4
     | EncryptedAssertionNotSupported
+    -- | No public key was provided.
+    | NoPublicKey
     deriving Show
 
 --------------------------------------------------------------------------------
