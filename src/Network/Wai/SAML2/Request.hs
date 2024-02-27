@@ -35,10 +35,14 @@ import Crypto.Random
 
 import Data.Time.Clock
 
+import Network.Wai.SAML2.Assertion
 import Network.Wai.SAML2.NameIDFormat
 import Network.Wai.SAML2.XML
+import Network.Wai.SAML2.Signature
 
+import Text.Read (readEither)
 import Text.XML
+import Text.XML.Cursor
 
 import qualified Codec.Compression.Zlib.Raw as Deflate
 import qualified Data.ByteString as B
@@ -46,8 +50,12 @@ import qualified Data.ByteString.Base16 as Base16
 import qualified Data.ByteString.Base64 as Base64
 import qualified Data.ByteString.Lazy as BL
 import qualified Data.Map.Strict as Map
+import           Data.Maybe (listToMaybe)
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as T
+
+import Control.Monad.Except (runExceptT, ExceptT (..))
+
 import Network.HTTP.Types (urlEncode)
 
 -------------------------------------------------------------------------------
@@ -72,8 +80,41 @@ data AuthnRequest
     ,   authnRequestAllowCreate :: !Bool
         -- | The URI reference corresponding to a name identifier format
     ,   authnRequestNameIDFormat :: !NameIDFormat
+        -- | The name identifier to be used to represent the requested subject
+    ,   authnRequestNameID :: !(Maybe NameID)
+        -- | The assertion included in the request.
+        --
+        -- @since 0.6
+    ,   authnRequestSignature :: !(Maybe Signature)
     }
     deriving (Eq, Show)
+
+instance FromXML AuthnRequest where
+    parseXML cursor = do
+        issueInstant <- parseUTCTime
+                      $ T.concat
+                      $ attribute "IssueInstant" cursor
+
+        --allowCreate <- parseField $ attribute "allowCreate" cursor
+        nameIDFormat <- parseNameIDFormat $ T.concat $ cursor $/ attribute "Format"
+
+        pure AuthnRequest{
+          authnRequestTimestamp = issueInstant,
+          authnRequestID = T.concat $ attribute "ID" cursor,
+          authnRequestIssuer = T.concat $
+                cursor $/ element (saml2Name "Issuer") &/ content,
+          authnRequestDestination = listToMaybe $ attribute "Destination" cursor,
+          authnRequestAllowCreate = False, -- allowCreate,
+          authnRequestNameIDFormat = nameIDFormat,
+          authnRequestNameID = parseOptionalField $ saml2Name "NameID",
+          authnRequestSignature = parseOptionalField $ dsName "Signature"
+        }
+      where
+        parseOptionalField :: (FromXML a) => Name -> Maybe a
+        parseOptionalField identifier =
+           listToMaybe $ ( cursor
+                       $/  element identifier
+                       ) >>= parseXML
 
 -- | Creates a default 'AuthnRequest' with the current timestamp and a
 -- randomly-generated ID.
@@ -89,6 +130,8 @@ issueAuthnRequest authnRequestIssuer = do
         authnRequestAllowCreate = True
     ,   authnRequestNameIDFormat = Transient
     ,   authnRequestDestination = Nothing
+    ,   authnRequestNameID = Nothing
+    ,   authnRequestSignature = Nothing
     ,   ..
     }
 
