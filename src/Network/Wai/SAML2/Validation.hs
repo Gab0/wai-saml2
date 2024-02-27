@@ -10,37 +10,44 @@ module Network.Wai.SAML2.Validation (
     validateResponse,
     decodeResponse,
     validateSAMLResponse,
+    readSignedCertificate,
+    readPKCS12Certificate,
     ansiX923
 ) where
 
 --------------------------------------------------------------------------------
 
-import Control.Exception
-import Control.Monad (forM_, when, unless)
+import Control.Exception (try)
 import Control.Monad.Except
-import Control.Monad.IO.Class (liftIO)
 
 import Crypto.Error
 import Crypto.Hash
 import qualified Crypto.PubKey.RSA.OAEP as OAEP
 import Crypto.PubKey.RSA.PKCS15 as PKCS15
-import Crypto.PubKey.RSA.Types (PrivateKey)
+import Crypto.PubKey.RSA.Types (PrivateKey, PublicKey (..))
 import Crypto.Cipher.AES
 import Crypto.Cipher.Types
 
+import qualified Crypto.Store.PKCS12   as PKCS12
+import qualified Crypto.Store.X509     as X509
+import qualified Data.X509
+
 import qualified Data.ByteString as BS
+import qualified Data.ByteString.UTF8  as BSU
 import qualified Data.ByteString.Base64 as BS
 import qualified Data.ByteString.Lazy as LBS
 import Data.Default.Class
+import Data.Maybe (catMaybes, listToMaybe, fromMaybe)
 import Data.Time
 
-import Network.Wai.SAML2.XML.Encrypted
+import Network.Wai.SAML2.Assertion
 import Network.Wai.SAML2.Config
 import Network.Wai.SAML2.Error
 import Network.Wai.SAML2.XML
 import Network.Wai.SAML2.C14N
+import Network.Wai.SAML2.KeyInfo
 import Network.Wai.SAML2.Response
-import Network.Wai.SAML2.Assertion
+import Network.Wai.SAML2.XML.Encrypted
 
 import qualified Text.XML as XML
 import qualified Text.XML.Cursor as XML
@@ -64,7 +71,7 @@ validateResponse cfg responseData = runExceptT $ do
 -- in Base64-encoded @responseData@.
 --
 -- @since 0.4
-decodeResponse :: BS.ByteString -> ExceptT SAML2Error IO (XML.Document, Response)
+decodeResponse :: FromXML a => BS.ByteString -> ExceptT SAML2Error IO (XML.Document, a)
 decodeResponse responseData = do
     -- the response data is Base64-encoded; decode it
     let resXmlDocData = BS.decodeLenient responseData
@@ -193,13 +200,17 @@ validateSAMLResponse cfg responseXmlDoc samlResponse now = do
     -- first: extract the signature data from the response
     let sig = BS.decodeLenient $ signatureValue $ responseSignature samlResponse
 
+    -- Read the public key from all the possible sources.
+    let pubKey' = loadPublicKey cfg samlResponse
+
     -- using the IdP's public key and the canonicalised SignedInfo element,
     -- check that the signature is correct
-    let pubKey = saml2PublicKey cfg
-
-    if PKCS15.verify (Just SHA256) pubKey normalisedSignedInfo sig
-    then pure ()
-    else throwError InvalidSignature
+    case pubKey' of
+        Just pubKey ->
+            if PKCS15.verify (Just SHA256) pubKey normalisedSignedInfo sig
+            then pure ()
+            else throwError InvalidSignature
+        Nothing -> throwError NoPublicKey
 
     assertion <- case responseEncryptedAssertion samlResponse of
         Just encrypted -> case saml2PrivateKey cfg of
@@ -303,6 +314,77 @@ ansiX923 d
           padBytes = BS.index d (len-1)
           padLen = fromIntegral padBytes
           (content,_) = BS.splitAt (len - padLen) d
+
+-- | Read a signed certificate from a PEM string and extract its public key.
+readSignedCertificate :: String -> Either String PublicKey
+readSignedCertificate input = do
+  prepared_input <- ensurePemFrame input
+
+  case parseCertificates prepared_input of
+    [] -> Left "Invalid certificate."
+    (x:_) -> case Data.X509.signedObject $ Data.X509.getSigned x of
+      Data.X509.Certificate _ _ _ _ _ _ (Data.X509.PubKeyRSA pubKey) _ -> Right pubKey
+      _ -> Left $ "Wrong type of certificate." ++ show x
+  where
+    parseCertificates :: String -> [Data.X509.SignedCertificate]
+    parseCertificates = X509.readSignedObjectFromMemory . BSU.fromString
+
+    ensurePemFrame x = case listToMaybe x of
+      Just '-' -> Right x
+      Just _   -> Right $ "-----BEGIN CERTIFICATE-----\n" ++ x ++ "\n-----END CERTIFICATE-----"
+      Nothing  -> Left "Empty certificate."
+
+-- | Read the public key from multiple possible sources.
+-- 1. From the SAML response itself.
+-- 2. From the configuration (environment variable).
+loadPublicKey :: SAML2Config -> Response -> Maybe PublicKey
+loadPublicKey cfg samlResponse =
+    listToMaybe $ catMaybes [fromResponse, saml2PublicKey cfg]
+  where
+    fromResponse | not $ saml2AcceptResponseCertificate cfg = Nothing
+                 | otherwise = do
+      keyInfo <- signatureKeyInfo $ responseSignature samlResponse
+      case readSignedCertificate $ BSU.toString $ keyInfoCertificate keyInfo of
+        Left _       -> Nothing
+        Right pubKey -> Just pubKey
+
+-- | Read public keys from a PKCS12 file, which might be password-protected.
+readPKCS12Certificate :: BS.ByteString -> Maybe BSU.ByteString -> Either String PublicKey
+readPKCS12Certificate contents raw_password =
+  case loaded_key of
+    Right u  ->
+      case PKCS12.recoverAuthenticated password u of
+        Right (_, pkcs12) -> extractFromPKCS12 pkcs12
+        Left err -> Left $ "Cannot decode key file: " ++ show err ++ " - using password: <" ++ show password ++ ">"
+    Left err -> Left $ "Cannot read key file: " ++ show err
+  where
+    loaded_key = PKCS12.readP12FileFromMemory contents
+
+    displayErr :: (Show err) => Either err a -> Either String a
+    displayErr (Left e) = Left $ show e
+    displayErr (Right ok) = Right ok
+
+    password = fromMaybe "" raw_password
+
+    -- | Here we disassemble the complex PKCS12 data type and try to extract
+    -- the X509 certificate.
+    extractFromPKCS12 :: PKCS12.PKCS12 -> Either String PublicKey
+    extractFromPKCS12 pkcs12 = do
+      recovered <- displayErr
+                 $ PKCS12.recover (PKCS12.toProtectionPassword password)
+                 $ PKCS12.unPKCS12 pkcs12
+
+      case listToMaybe $ concatMap (map checkSafeBag . PKCS12.unSafeContents) recovered of
+        Just key -> case key of
+          Just (Data.X509.PubKeyRSA k) -> Right k
+          _                            -> Left "Wrong type of key."
+        Nothing -> Left "Cannot find public key in certificate."
+
+    checkSafeBag :: PKCS12.SafeBag -> Maybe Data.X509.PubKey
+    checkSafeBag b = case b of
+      PKCS12.Bag (PKCS12.CertBag (PKCS12.Bag (PKCS12.CertX509 certificate) _)) _ ->
+        Just $ Data.X509.certPubKey $ Data.X509.getCertificate certificate
+      _ -> Nothing
 
 --------------------------------------------------------------------------------
 
