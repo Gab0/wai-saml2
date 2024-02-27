@@ -74,9 +74,7 @@ instance FromXML Response where
                       $ T.concat
                       $ attribute "IssueInstant" cursor
 
-        statusCode <- case parseXML cursor of
-            Nothing -> fail "Invalid status code"
-            Just sc -> pure sc
+        statusCode <- parseXML cursor
 
         let assertion = listToMaybe
                     $ ( cursor
@@ -88,8 +86,12 @@ instance FromXML Response where
                     $/  element (saml2Name "EncryptedAssertion")
                     ) >>= parseXML
 
-        signature <- oneOrFail "Signature is required" (
-            cursor $/ element (dsName "Signature") ) >>= parseXML
+        -- The signature can be either under the 'Assertion' element,
+        -- or just under 'Response'.
+        let sigUnderResponse = cursor $/ element (dsName "Signature")
+        let sigUnderAssertion = cursor $/ element (saml2Name "Assertion") &/ element (dsName "Signature")
+
+        sig <- oneOrFail "Signature is required" (sigUnderResponse ++ sigUnderAssertion) >>= parseXML
 
         pure Response{
             responseDestination = T.concat $ attribute "Destination" cursor,
@@ -100,7 +102,7 @@ instance FromXML Response where
             responseIssuer = T.concat $
                 cursor $/ element (saml2Name "Issuer") &/ content,
             responseStatusCode = statusCode,
-            responseSignature = signature,
+            responseSignature = sig,
             responseAssertion = assertion,
             responseEncryptedAssertion = encAssertion
         }

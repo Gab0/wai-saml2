@@ -18,11 +18,13 @@ module Network.Wai.SAML2.Signature (
 --------------------------------------------------------------------------------
 
 import qualified Data.ByteString as BS
+import           Data.Maybe (listToMaybe)
 import qualified Data.Text as T
 import Data.Text.Encoding
 
 import Text.XML.Cursor
 
+import Network.Wai.SAML2.KeyInfo
 import Network.Wai.SAML2.XML
 
 --------------------------------------------------------------------------------
@@ -47,11 +49,13 @@ instance FromXML CanonicalisationMethod where
 data SignatureMethod
     -- | RSA with SHA256 digest
     = RSA_SHA256
+    | RSA_SHA1
     deriving (Eq, Show)
 
 instance FromXML SignatureMethod where
     parseXML cursor = case T.concat $ attribute "Algorithm" cursor of
         "http://www.w3.org/2001/04/xmldsig-more#rsa-sha256" -> pure RSA_SHA256
+        "http://www.w3.org/2000/09/xmldsig#rsa-sha1" -> pure RSA_SHA1
         _ -> fail "Not a valid SignatureMethod"
 
 --------------------------------------------------------------------------------
@@ -60,11 +64,13 @@ instance FromXML SignatureMethod where
 data DigestMethod
     -- | SHA256
     = DigestSHA256
+    | DigestSHA1
     deriving (Eq, Show)
 
 instance FromXML DigestMethod where
     parseXML cursor =  case T.concat $ attribute "Algorithm" cursor of
         "http://www.w3.org/2001/04/xmlenc#sha256" -> pure DigestSHA256
+        "http://www.w3.org/2000/09/xmldsig#sha1" -> pure DigestSHA1
         _ -> fail "Not a valid DigestMethod"
 
 -- | Represents a reference to some entity along with a digest of it.
@@ -140,7 +146,9 @@ data Signature = Signature {
     -- | Information about the data for which the IdP has computed digests.
     signatureInfo :: !SignedInfo,
     -- | The signature of the 'SignedInfo' value.
-    signatureValue :: !BS.ByteString
+    signatureValue :: !BS.ByteString,
+    -- | The assertion's signature certificate.
+    signatureKeyInfo :: !(Maybe KeyInfo)
 } deriving (Eq, Show)
 
 instance FromXML Signature where
@@ -153,7 +161,10 @@ instance FromXML Signature where
 
         pure Signature{
             signatureInfo = info,
-            signatureValue = value
+            signatureValue = value,
+            signatureKeyInfo = listToMaybe $ cursor
+                             $/ element (dsName "KeyInfo")
+                            >=> parseXML
         }
 
 --------------------------------------------------------------------------------
