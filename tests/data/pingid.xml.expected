@@ -1,0 +1,74 @@
+Response
+  { responseDestination =
+      "http://host.minikube.internal:3000/sso/assert"
+  , responseInResponseTo = Nothing
+  , responseId = "AovTvbYKoXbh0r24xsyBNCHcJER"
+  , responseIssueInstant = 2023-12-22 18:14:18.809 UTC
+  , responseVersion = "2.0"
+  , responseIssuer = "authentication"
+  , responseStatusCode =
+      MkStatusCode
+        { statusCodeValue = Success , statusCodeSubordinate = Nothing }
+  , responseSignature =
+      Signature
+        { signatureInfo =
+            SignedInfo
+              { signedInfoCanonicalisationMethod = C14N_EXC_1_0
+              , signedInfoSignatureMethod = RSA_SHA256
+              , signedInfoReference =
+                  Reference
+                    { referenceURI = "AovTvbYKoXbh0r24xsyBNCHcJER"
+                    , referenceDigestMethod = DigestSHA256
+                    , referenceDigestValue =
+                        "AFTJKElrLMvwRdjXnznwPXwt18+cXRu6MTu5HeD8eC8="
+                    }
+              }
+        , signatureValue =
+            "YqnsjSe1OKOJlL85CUwlNHaYnxl2INYBsCk2eBDT5+Km7AP+qZr4WNNEhjqgkBXEckN3I0dGKgWZ0VAa4/MVqixy1U/TXqseOpIdBzgmHrQD/w1uRrQDIdBysZMU9br7PSC/9ILPNSMcppTcU7wfntDOXNK3AxDBaKDzEZpPhOiRkqo5T3qv4OS7Q+43COlEz8A/bLwGUBg/E+6wQbo8vKzZWR4aRZr3IwNrOxbZyS5xyM19nhxThZteplAJslkDxySpx9pyD+KH7Re2vUKeFHTvWYG/I+ZPU+jFRyn1siwgWp2Av4bcC+aAy/G+OCBwwVZjcftKzW2kzKV8UxMdYwh6ZM0RewJHjD8H+EWzzpN3qx3/z81yYPg1giJphLd5jvJl+Mh+6WLL10sCJxA2JXLlaJdDGFXtgAL84LZ8Kq++4YMiKRAqE3Rpjn6Ys/jesVnH5m0K5P0BmsBkxbyP7qZk8q2d9e2bruQPHFLSSlvOYcSHYsg1mJJKxMim7q9gE2EduF4xo3+QnpuRRqZlNOTWV2sLqROkMJFdzikqcYVk22lco/VuSu6FB1A9f407F7eWpEa7jbL9dt7ASWN/fkLRktiVYG2InKok8vMNTdvF+U5vEotw4Dewfm48sfQcjzFNkyTOraEvXNS42AD5Oi4U13E6Uw6HtWg3fZOWGus="
+        , signatureKeyInfo = Nothing
+        }
+  , responseAssertion =
+      Just
+        Assertion
+          { assertionId = "SDcihfummt.7x.64J1owM_q9EuG"
+          , assertionIssued = 2023-12-22 18:14:18.818 UTC
+          , assertionIssuer = "authentication"
+          , assertionSubject =
+              Subject
+                { subjectConfirmations =
+                    [ SubjectConfirmation
+                        { subjectConfirmationMethod = Bearer
+                        , subjectConfirmationAddress = ""
+                        , subjectConfirmationNotOnOrAfter = 2023-12-22 18:19:18.819 UTC
+                        , subjectConfirmationRecipient =
+                            "http://host.minikube.internal:3000/sso/assert"
+                        }
+                    ]
+                , subjectNameID =
+                    NameID
+                      { nameIDQualifier = Nothing
+                      , nameIDSPNameQualifier = Nothing
+                      , nameIDSPProvidedID = Nothing
+                      , nameIDFormat = Just Unspecified
+                      , nameIDValue = "tester"
+                      }
+                }
+          , assertionConditions =
+              Conditions
+                { conditionsNotBefore = 2023-12-22 18:09:18.819 UTC
+                , conditionsNotOnOrAfter = 2023-12-22 18:19:18.819 UTC
+                , conditionsAudienceRestrictions =
+                    [ AudienceRestriction
+                        { audienceRestrictionAudience = [ "postgrest" ] }
+                    ]
+                }
+          , assertionAuthnStatement =
+              AuthnStatement
+                { authnStatementInstant = 2023-12-22 18:14:18.814 UTC
+                , authnStatementSessionIndex = "SDcihfummt.7x.64J1owM_q9EuG"
+                , authnStatementLocality = ""
+                }
+          , assertionAttributeStatement = []
+          }
+  , responseEncryptedAssertion = Nothing
+  }

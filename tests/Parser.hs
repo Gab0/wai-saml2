@@ -3,6 +3,7 @@
 {-# LANGUAGE TypeApplications #-}
 import Network.Wai.SAML2.EntityDescriptor
 import Network.Wai.SAML2.Response
+import Network.Wai.SAML2.Request
 import Network.Wai.SAML2.XML
 import System.FilePath
 import Test.Tasty
@@ -23,6 +24,9 @@ main = defaultMain $ testGroup "Parse SAML2 response"
     [ mkGolden @Response $ prefix </> "keycloak.xml"
     , mkGolden @Response $ prefix </> "okta.xml"
     , mkGolden @Response $ prefix </> "google.xml"
+    , mkGolden @Response $ prefix </> "idp.xml"
+    , mkGolden @Response $ prefix </> "pingid.xml"
+    , mkGolden @AuthnRequest $ prefix </> "pingid-logout.xml"
     , mkGolden @IDPSSODescriptor $ prefix </> "metadata/keycloak.xml"
     , mkGolden @IDPSSODescriptor $ prefix </> "metadata/google.xml"
     ]

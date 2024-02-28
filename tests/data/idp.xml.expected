@@ -1,0 +1,104 @@
+Response
+  { responseDestination = "http://sp.example.com/demo1/index.php?acs"
+  , responseInResponseTo =
+      Just "ONELOGIN_4fee3b046395c4e751011e97f8900b5273d56685"
+  , responseId = "_8e8dc5f69a98cc4c1ff3427e5ce34606fd672f91e6"
+  , responseIssueInstant = 2014-07-17 01:01:48 UTC
+  , responseVersion = "2.0"
+  , responseIssuer = "http://idp.example.com/metadata.php"
+  , responseStatusCode =
+      MkStatusCode
+        { statusCodeValue = Success , statusCodeSubordinate = Nothing }
+  , responseSignature =
+      Signature
+        { signatureInfo =
+            SignedInfo
+              { signedInfoCanonicalisationMethod = C14N_EXC_1_0
+              , signedInfoSignatureMethod = RSA_SHA1
+              , signedInfoReference =
+                  Reference
+                    { referenceURI = "pfxbfa23d99-43b6-e689-806b-14c6499b825a"
+                    , referenceDigestMethod = DigestSHA1
+                    , referenceDigestValue = "hDEwVlnMLg6kE78bhCimv1E1/D0="
+                    }
+              }
+        , signatureValue =
+            "f21DzJWa/H/R/4utp7QhFlRjX/UgFhAfjNrQTi48s8c2gzzAMc29eLnKMBWyvN/5ahdYkGfAWUgExLATFfN1fjL/xKsKsyaqWpxPtvr6kcsNsuWanjaEKqwK93S1QSXaz0nMhKaTePNaUZxw1DSkC3X5Z52+E+VZsJNbvm8Ltug="
+        , signatureKeyInfo =
+            Just
+              KeyInfo
+                { keyInfoCertificate =
+                    "MIICajCCAdOgAwIBAgIBADANBgkqhkiG9w0BAQ0FADBSMQswCQYDVQQGEwJ1czETMBEGA1UECAwKQ2FsaWZvcm5pYTEVMBMGA1UECgwMT25lbG9naW4gSW5jMRcwFQYDVQQDDA5zcC5leGFtcGxlLmNvbTAeFw0xNDA3MTcxNDEyNTZaFw0xNTA3MTcxNDEyNTZaMFIxCzAJBgNVBAYTAnVzMRMwEQYDVQQIDApDYWxpZm9ybmlhMRUwEwYDVQQKDAxPbmVsb2dpbiBJbmMxFzAVBgNVBAMMDnNwLmV4YW1wbGUuY29tMIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDZx+ON4IUoIWxgukTb1tOiX3bMYzYQiwWPUNMp+Fq82xoNogso2bykZG0yiJm5o8zv/sd6pGouayMgkx/2FSOdc36T0jGbCHuRSbtia0PEzNIRtmViMrt3AeoWBidRXmZsxCNLwgIV6dn2WpuE5Az0bHgpZnQxTKFek0BMKU/d8wIDAQABo1AwTjAdBgNVHQ4EFgQUGHxYqZYyX7cTxKVODVgZwSTdCnwwHwYDVR0jBBgwFoAUGHxYqZYyX7cTxKVODVgZwSTdCnwwDAYDVR0TBAUwAwEB/zANBgkqhkiG9w0BAQ0FAAOBgQByFOl+hMFICbd3DJfnp2Rgd/dqttsZG/tyhILWvErbio/DEe98mXpowhTkC04ENprOyXi7ZbUqiicF89uAGyt1oqgTUCD1VsLahqIcmrzgumNyTwLGWo17WDAa1/usDhetWAMhgzF/Cnf5ek0nK00m0YZGyc4LzgD0CROMASTWNg=="
+                }
+        }
+  , responseAssertion =
+      Just
+        Assertion
+          { assertionId = "pfxbfa23d99-43b6-e689-806b-14c6499b825a"
+          , assertionIssued = 2014-07-17 01:01:48 UTC
+          , assertionIssuer = "http://idp.example.com/metadata.php"
+          , assertionSubject =
+              Subject
+                { subjectConfirmations =
+                    [ SubjectConfirmation
+                        { subjectConfirmationMethod = Bearer
+                        , subjectConfirmationAddress = ""
+                        , subjectConfirmationNotOnOrAfter = 2024-01-18 06:21:48 UTC
+                        , subjectConfirmationRecipient =
+                            "http://sp.example.com/demo1/index.php?acs"
+                        }
+                    ]
+                , subjectNameID =
+                    NameID
+                      { nameIDQualifier = Nothing
+                      , nameIDSPNameQualifier =
+                          Just "http://sp.example.com/demo1/metadata.php"
+                      , nameIDSPProvidedID = Nothing
+                      , nameIDFormat = Just Transient
+                      , nameIDValue = "_ce3d2948b4cf20146dee0a0b3dd6f69b6cf86f62d7"
+                      }
+                }
+          , assertionConditions =
+              Conditions
+                { conditionsNotBefore = 2014-07-17 01:01:18 UTC
+                , conditionsNotOnOrAfter = 2024-01-18 06:21:48 UTC
+                , conditionsAudienceRestrictions =
+                    [ AudienceRestriction
+                        { audienceRestrictionAudience =
+                            [ "http://sp.example.com/demo1/metadata.php" ]
+                        }
+                    ]
+                }
+          , assertionAuthnStatement =
+              AuthnStatement
+                { authnStatementInstant = 2014-07-17 01:01:48 UTC
+                , authnStatementSessionIndex =
+                    "_be9967abd904ddcae3c0eb4189adbe3f71e327cf93"
+                , authnStatementLocality = ""
+                }
+          , assertionAttributeStatement =
+              [ AssertionAttribute
+                  { attributeName = "uid"
+                  , attributeFriendlyName = Nothing
+                  , attributeNameFormat =
+                      "urn:oasis:names:tc:SAML:2.0:attrname-format:basic"
+                  , attributeValue = "test"
+                  }
+              , AssertionAttribute
+                  { attributeName = "mail"
+                  , attributeFriendlyName = Nothing
+                  , attributeNameFormat =
+                      "urn:oasis:names:tc:SAML:2.0:attrname-format:basic"
+                  , attributeValue = "test@example.com"
+                  }
+              , AssertionAttribute
+                  { attributeName = "eduPersonAffiliation"
+                  , attributeFriendlyName = Nothing
+                  , attributeNameFormat =
+                      "urn:oasis:names:tc:SAML:2.0:attrname-format:basic"
+                  , attributeValue = "usersexamplerole1"
+                  }
+              ]
+          }
+  , responseEncryptedAssertion = Nothing
+  }

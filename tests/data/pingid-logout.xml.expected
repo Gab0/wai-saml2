@@ -1,0 +1,36 @@
+AuthnRequest
+  { authnRequestTimestamp = 2024-02-25 20:47:37.51 UTC
+  , authnRequestID = "CVF.JaxEAbpzfJTNB6o3QT92EeN"
+  , authnRequestIssuer = ""
+  , authnRequestDestination = Just "http://localhost:3000/slo/assert"
+  , authnRequestAllowCreate = False
+  , authnRequestNameIDFormat = Unspecified
+  , authnRequestNameID =
+      Just
+        NameID
+          { nameIDQualifier = Nothing
+          , nameIDSPNameQualifier = Nothing
+          , nameIDSPProvidedID = Nothing
+          , nameIDFormat = Just Unspecified
+          , nameIDValue = "tester"
+          }
+  , authnRequestSignature =
+      Just
+        Signature
+          { signatureInfo =
+              SignedInfo
+                { signedInfoCanonicalisationMethod = C14N_EXC_1_0
+                , signedInfoSignatureMethod = RSA_SHA256
+                , signedInfoReference =
+                    Reference
+                      { referenceURI = "CVF.JaxEAbpzfJTNB6o3QT92EeN"
+                      , referenceDigestMethod = DigestSHA256
+                      , referenceDigestValue =
+                          "aDWirJPyN9SvCaVidvIi//eOPrgUm3CiU2FJpYXk1jE="
+                      }
+                }
+          , signatureValue =
+              "EZgKtxxOISEMA8pYqF9vvvwViw7iYyPbQhyH4NiyZHqPt7ZYjSZNVIfoCn1lccDfQGaeFBrWVpds08oYs6Q8LlXzySg3k9VNsghTWvstMXWmLs4/qVAvkzPvL9iCC4tpiQox/kqfgmd1zSJfKtB6CuwgFUtL2gbaSl8/3Oz9jnookCUynw2y7TZHlQ1JexAYB3f9FVUrBhz2vsalk8lSAqrpVpXWRdR2h2p5oQM3nSKJltTwYF+VnyFHRK8PR4594v6nCkb8rgrlKyuzdig5t0NM3f6oriT0+4ZDUonp74xhbJ3qfO5YEmE/Nr3u852VOYB1xH2clsGnz5T1n3Oc6Bc06YiXeQp7/4UQ3GNtshg0Rbxq26D8wm1nVI/Fk62k7er6NLZyvAA4CPqBbnbSx+YFvQnPU3OTYx3XmjWkz0aEHCCSCl1nWfSG4EustcbVkyEUhXSbPCCUWqdVqv4va6rbzZm2B8zxszYH0UyWil49ATJMaWkfQ5OG1fBsvmzI1vrxn11c1SEf/pd1AtQIlcSwiXr9IgAZwCPX1i9eb/9dNro0k61R86EuRPwRax4tMOCfl3HQyLgUCyiRkTEKz1xcL+2jsdIEMELsC6rH6pRYUJoV73vyAmldBO0f9DmVXRAz/6vghggtkGw5dtKlo6iQEaZ/4tcOjMA5nlkwIpQ="
+          , signatureKeyInfo = Nothing
+          }
+  }
