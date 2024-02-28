@@ -111,7 +111,7 @@ saml2Callback cfg callback app req sendResponse = do
             -- we are not expecting any
             let bodyOpts = setMaxRequestNumFiles 0
                          $ setMaxRequestFileSize 0
-                         $ defaultParseRequestBodyOptions
+                           defaultParseRequestBodyOptions
 
             -- parse the request
             (body, _) <- parseRequestBodyEx bodyOpts lbsBackEnd req
